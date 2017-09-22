@@ -49,8 +49,8 @@ Then try to modify user.js, access to `localhost:3000`.
 
 option:
 
-1. includes: as `PROXY_HOT_RELOAD_INCLUDES`, files should be includes, see [glob](https://github.com/isaacs/node-glob).
-2. excludes: as `PROXY_HOT_RELOAD_EXCLUDES`, files should be excludes, see [glob](https://github.com/isaacs/node-glob).
+1. includes: files should be includes, see [glob](https://github.com/isaacs/node-glob).
+2. excludes: files should be excludes, see [glob](https://github.com/isaacs/node-glob).
 
 ### Note
 
@@ -58,6 +58,10 @@ option:
 2. proxy-hot-reload is effective for some specific files like: `lib/*.js`, `utils/*.js` etc.
 
 If you find some bugs please raise an issue or make a pull request.
+
+### Demo
+
+click [this](https://github.com/247521776/proxy-hot-reload-demo)
 
 ### License
 
