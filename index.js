@@ -25,8 +25,8 @@ const globOpt = {
 
 module.exports = function proxyHotReload(opts) {
   opts = opts || {};
-  const includes = glob.sync(process.env.PROXY_HOT_RELOAD_INCLUDES || opts.includes || '**/*.js', globOpt) || [];
-  const excludes = glob.sync(process.env.PROXY_HOT_RELOAD_EXCLUDES || opts.excludes || '**/node_modules/**', globOpt) || [];
+  const includes = glob.sync(opts.includes || '**/*.js', globOpt) || [];    
+  const excludes = glob.sync(opts.excludes || '**/node_modules/**', globOpt) || [];
   const filenames = _.difference(includes, excludes);
   debug('Watch files: %j', filenames);
 
@@ -36,7 +36,13 @@ module.exports = function proxyHotReload(opts) {
     })
     .on('change', (path) => {
       try {
-        if (require.cache[path]) {
+        //支持web服务热更新
+        const cache = require.cache[path];
+        if (cache) {
+          //是否存在父级，存在则删除父级缓存
+          if (cache.parent) {
+            cache.parent.children.splice(cache.parent.children.indexOf(cache), 1);
+          }
           delete require.cache[path];
           require(path);
           debug('Reload file: %s', path);
