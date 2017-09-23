@@ -36,17 +36,8 @@ module.exports = function proxyHotReload(opts) {
     })
     .on('change', (path) => {
       try {
-        //支持web服务热更新
-        const cache = require.cache[path];
-        if (cache) {
-          //是否存在父级，存在则删除父级缓存
-          if (cache.parent) {
-            cache.parent.children.splice(cache.parent.children.indexOf(cache), 1);
-          }
-          delete require.cache[path];
-          require(path);
-          debug('Reload file: %s', path);
-        }
+        //支持web服务热更新 以及多层级关系缓存处理
+        clearCache(path);
       } catch (e) {
         console.error('proxy-hot-reload reload %s error:', path);
         console.error(e.stack);
@@ -97,3 +88,18 @@ module.exports = function proxyHotReload(opts) {
     }
   });
 };
+function clearCache(path) {
+  const cache = require.cache[path];
+  if (cache) {
+      cache.parent.children.splice(cache.parent.children.indexOf(cache), 1);
+      const parent = cache.parent;
+      const filename = parent.filename;
+      delete require.cache[path];
+      require(path);
+      require.cache[path].parent = parent;
+      if (parent && parent.id !== ".") {
+          clearCache(parent.filename);
+      }
+      debug('Reload file: %s', path);
+  }
+}
