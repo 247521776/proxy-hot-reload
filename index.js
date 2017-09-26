@@ -16,6 +16,10 @@ const glob = require('glob');
 const shimmer = require('shimmer');
 const chokidar = require('chokidar');
 const debug = require('debug')('proxy-hot-reload');
+// 定时器列表
+const eventList = [];
+// 定时器
+const events = {};
 
 const pkg = require('./package');
 const globOpt = {
@@ -25,6 +29,8 @@ const globOpt = {
 
 module.exports = function proxyHotReload(opts) {
   opts = opts || {};
+  // 定时器市场，默认2s
+  const timeout = opts.timeout || 2000;
   const includes = glob.sync(opts.includes || '**/*.js', globOpt) || [];    
   const excludes = glob.sync(opts.excludes || '**/node_modules/**', globOpt) || [];
   const filenames = _.difference(includes, excludes);
@@ -36,8 +42,19 @@ module.exports = function proxyHotReload(opts) {
     })
     .on('change', (path) => {
       try {
-        //支持web服务热更新 以及多层级关系缓存处理
-        clearCache(path);
+        // 判断是否已经记录该定时器
+        if (eventList.indexOf(path) === -1) {
+          eventList.push(path);
+          events[path] = setTimeout(() => {
+            clearCache(path)
+          }, timeout);
+        }
+        else {
+          clearTimeout(events[path]);
+          events[path] = setTimeout(() => {
+            clearCache(path)
+          }, timeout);
+        }
       } catch (e) {
         console.error('proxy-hot-reload reload %s error:', path);
         console.error(e.stack);
@@ -88,8 +105,13 @@ module.exports = function proxyHotReload(opts) {
     }
   });
 };
+
+// 支持web服务热更新 以及多层级关系缓存处理
 function clearCache(path) {
   const cache = require.cache[path];
+  // 执行定时器 并在事件列表中去除以及清除定时器
+  eventList.splice(eventList.indexOf(path), 1);
+  clearTimeout(events[path]);
   if (cache) {
       cache.parent.children.splice(cache.parent.children.indexOf(cache), 1);
       const parent = cache.parent;
