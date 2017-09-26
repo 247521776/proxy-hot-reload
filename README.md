@@ -51,6 +51,7 @@ option:
 
 1. includes: files should be includes, see [glob](https://github.com/isaacs/node-glob).
 2. excludes: files should be excludes, see [glob](https://github.com/isaacs/node-glob).
+3. timeout: setTimeout.
 
 ### Note
 
